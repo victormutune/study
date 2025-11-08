@@ -82,3 +82,23 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes typing {
+    0% { width: 0; }
+    100% { width: 100%; }
+  }
+  
+  @keyframes zoom {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  
+  .animate-typing {
+    animation: typing 3s steps(40, end);
+  }
+  
+  .animate-zoom {
+    animation: zoom 20s ease-in-out infinite;
+  }
+}
