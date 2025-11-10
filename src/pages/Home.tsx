@@ -1,189 +1,306 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChevronRight, Play } from "lucide-react";
+import { ChevronRight, Play, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
+import FloatingTimeWidget from "@/components/floating-time-widget"
+import FeaturesSection from "@/components/features-section"
+import StatsSection from "@/components/stats-section"
+import SwipeableCardsSection from "@/components/swipeable-cards-section"
+import NewsSection from "@/components/news-section"
+import CTASection from "@/components/cta-section"
 
-const Home = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [api, setApi] = useState<any>();
-  const [current, setCurrent] = useState(0);
+import slide1 from "@/assets/images/slide1.jpg";
+import slide2 from "@/assets/images/slide2.jpg";
+import slide3 from "@/assets/images/slide3.jpg";
+import slide4 from "@/assets/images/slide4.jpg";
+import slide5 from "@/assets/images/slide5.jpg";
 
-  const heroSlides = [
-    {
-      title: "Strengthening Teacher Capacity",
-      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1600"
-    },
-    {
-      title: "Empowering Educational Excellence",
-      image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1600"
-    },
-    {
-      title: "Building Future Leaders",
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600"
-    },
-    {
-      title: "Research-Driven Innovation",
-      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1600"
-    },
-    {
-      title: "Global Partnership Network",
-      image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1600"
+const slideImages = [
+  { src: slide1, alt: "STEP-STUDY Research Excellence", animation: "zoom-in" },
+  { src: slide2, alt: "Teacher Professional Development", animation: "zoom-out" },
+  { src: slide3, alt: "International Collaboration", animation: "pan-left" },
+  { src: slide4, alt: "Educational Innovation", animation: "pan-right" },
+  { src: slide5, alt: "Academic Research", animation: "zoom-in" },
+];
+
+export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  const mainText = "Strengthening Teachers, Transforming Education";
+
+  useEffect(() => {
+    // Slideshow auto-advance
+    const slideInterval = setInterval(() => {
+      if (!isTransitioning) {
+        setIsTransitioning(true);
+        setCurrentSlide((prev) => (prev + 1) % slideImages.length);
+        // Reset typing animation
+        setDisplayedText("");
+        setIsTypingComplete(false);
+        setAnimationKey((prev) => prev + 1);
+        setTimeout(() => setIsTransitioning(false), 1500);
+      }
+    }, 6000);
+
+    return () => clearInterval(slideInterval);
+  }, [isTransitioning]);
+
+  useEffect(() => {
+    // Typing animation for main text - restarts with each slide
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex <= mainText.length) {
+        setDisplayedText(mainText.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+        setIsTypingComplete(true);
+      }
+    }, 80);
+
+    return () => clearInterval(typingInterval);
+  }, [animationKey]); // Re-run when animationKey changes
+
+  useEffect(() => {
+    // Cursor blinking after typing is complete
+    if (isTypingComplete) {
+      const cursorInterval = setInterval(() => {
+        setShowCursor((prev) => !prev);
+      }, 500);
+
+      return () => clearInterval(cursorInterval);
     }
-  ];
+  }, [isTypingComplete]);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const goToSlide = (index) => {
+    if (!isTransitioning && index !== currentSlide) {
+      setIsTransitioning(true);
+      setCurrentSlide(index);
+      // Reset typing animation
+      setDisplayedText("");
+      setIsTypingComplete(false);
+      setAnimationKey((prev) => prev + 1);
+      setTimeout(() => setIsTransitioning(false), 1500);
+    }
+  };
 
-  useEffect(() => {
-    if (!api) return;
+  const getAnimationClass = (animation, isActive) => {
+    if (!isActive) return "scale-100";
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
-  }, [api]);
+    switch (animation) {
+      case "zoom-in":
+        return "animate-ken-burns-zoom-in";
+      case "zoom-out":
+        return "animate-ken-burns-zoom-out";
+      case "pan-left":
+        return "animate-ken-burns-pan-left";
+      case "pan-right":
+        return "animate-ken-burns-pan-right";
+      default:
+        return "animate-ken-burns-zoom-in";
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <Carousel 
-        setApi={setApi}
-        opts={{ loop: true }}
-        plugins={[
-          Autoplay({
-            delay: 5000,
-          }),
-        ]}
-        className="relative h-[600px] overflow-hidden"
-      >
-        <CarouselContent>
-          {heroSlides.map((slide, index) => (
-            <CarouselItem key={index}>
-              <section 
-                className="relative h-[600px] bg-cover bg-center overflow-hidden"
-                style={{ 
-                  backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${slide.image}')`,
+    <div >
+      <FloatingTimeWidget />
+      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16 sm:pt-20">
+        {/* Modern Slideshow Container */}
+        <div className="absolute inset-0 z-0">
+          {slideImages.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {/* Ken Burns Effect Container */}
+              <div
+                className={`w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-[8000ms] ease-linear ${getAnimationClass(
+                  slide.animation,
+                  index === currentSlide
+                )}`}
+                style={{
+                  backgroundImage: `url(${slide.src})`,
                 }}
-              >
-                <div className="absolute inset-0 animate-zoom bg-cover bg-center"
-                  style={{ 
-                    backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${slide.image}')`,
+              />
+
+              {/* Elegant Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/20 to-black/40" />
+            </div>
+          ))}
+        </div>
+
+        {/* Content Overlay */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex-1 flex flex-col justify-center py-16 mb-12">
+          {/* Animated Main Headline - Fixed Height */}
+          <div className="mb-8 sm:mb-15 min-h-[120px] sm:min-h-[140px] lg:min-h-[180px] flex items-center justify-center">
+            <h1 className="text-white font-bold leading-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl drop-shadow-2xl">
+              <span className="inline-block whitespace-normal max-w-5xl">
+                {displayedText}
+                <span
+                  className={`inline-block w-0.5 sm:w-1 ml-1 bg-white transition-opacity duration-100 align-middle ${
+                    isTypingComplete
+                      ? showCursor
+                        ? "opacity-100"
+                        : "opacity-0"
+                      : "animate-pulse opacity-100"
+                  }`}
+                  style={{
+                    height: "0.9em",
+                    verticalAlign: "middle",
                   }}
-                />
-                
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white max-w-4xl px-4">
-                    <h1 className="text-6xl font-bold mb-8 leading-tight overflow-hidden whitespace-nowrap inline-block">
-                      <span className="inline-block animate-typing border-r-4 border-white pr-1">
-                        {slide.title}
-                      </span>
-                    </h1>
-                    <div className="flex flex-wrap gap-4 justify-center mb-12">
-                      <Link to="/research">
-                        <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                          Explore Our Research
-                          <ChevronRight className="ml-2 w-5 h-5" />
-                        </Button>
-                      </Link>
-                      <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white/20">
-                        <Play className="mr-2 w-5 h-5" />
-                        Learn More
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        
-        {/* Date/Time Widget */}
-        <div className="absolute top-8 right-8 bg-black/30 backdrop-blur-md rounded-lg p-4 text-white border border-white/20 z-10">
-          <div className="text-3xl font-bold">
-            {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+                >
+                  |
+                </span>
+              </span>
+            </h1>
           </div>
-          <div className="text-sm opacity-90">
-            {currentTime.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+
+          {/* CTA Buttons */}
+          <div
+            className={`flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-12 sm:mb-16 transition-all duration-1000 ${
+              displayedText.length > 0 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 hover:from-blue-700 hover:via-blue-700 hover:to-blue-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+            >
+              <Link to="/research" className="flex items-center justify-center">
+                <span className="relative z-10">Explore Our Research</span>
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 relative z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-x-[-100%] group-hover:translate-x-[100%]" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold bg-white/5 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            >
+              <Link to="/about" className="flex items-center justify-center">
+                <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                Learn More
+              </Link>
+            </Button>
           </div>
-          <div className="text-xs opacity-75">
-            {currentTime.toLocaleDateString('en-US', { weekday: 'long' })}
-          </div>
-        </div>
 
-        {/* Carousel indicators */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-          {heroSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => api?.scrollTo(i)}
-              className={`w-3 h-3 rounded-full transition-all ${i === current ? 'bg-white w-8' : 'bg-white/50'}`}
-            />
-          ))}
-        </div>
-      </Carousel>
-
-      {/* Feature Cards */}
-      <section className="container mx-auto px-4 -mt-20 relative z-10 mb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card border-l-4 border-l-primary hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-3 text-card-foreground">Research Excellence</h3>
-              <p className="text-muted-foreground">Evidence-based educational solutions</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card border-l-4 border-l-primary hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-3 text-card-foreground">Teacher Empowerment</h3>
-              <p className="text-muted-foreground">Professional development programs</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card border-l-4 border-l-primary hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-3 text-card-foreground">Global Collaboration</h3>
-              <p className="text-muted-foreground">International partnerships</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Impact Section */}
-      <section className="bg-gradient-to-br from-primary via-primary to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-4">Our Impact in Numbers</h2>
-          <p className="text-center mb-12 opacity-90 max-w-3xl mx-auto">
-            Measuring our success through meaningful partnerships, research excellence, and educational transformation.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Floating Cards Preview */}
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto transition-all duration-1000 ${
+              displayedText.length > 0 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
             {[
-              { number: "3", label: "Partner Institutions" },
-              { number: "50+", label: "Research Projects" },
-              { number: "1000+", label: "Teachers Trained" },
-              { number: "25+", label: "Publications" },
-            ].map((stat, index) => (
-              <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all">
-                <CardContent className="p-8 text-center">
-                  <div className="text-5xl font-bold mb-2">{stat.number}</div>
-                  <div className="text-sm opacity-90">{stat.label}</div>
-                </CardContent>
-              </Card>
+              { title: "Research Excellence", desc: "Evidence-based educational solutions" },
+              { title: "Teacher Empowerment", desc: "Professional development programs" },
+              { title: "Global Collaboration", desc: "International partnerships" },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 border border-white/20 dark:border-gray-700/30 group"
+              >
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  {item.title}
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm">{item.desc}</p>
+              </div>
             ))}
           </div>
         </div>
-      </section>
-    </div>
-  );
-};
 
-export default Home;
+        {/* Navigation Indicators */}
+        <div className="absolute bottom-16 sm:bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3 z-10">
+          {slideImages.map((_, index) => (
+            <button
+              key={index}
+              aria-label={`Go to slide ${index + 1}`}
+              className={`w-2.5 h-2.5 sm:w-3 sm:h-3 border-2 border-white/60 rounded-full transition-all duration-400 relative ${
+                index === currentSlide ? "bg-white" : "bg-transparent hover:bg-white/50"
+              }`}
+              onClick={() => goToSlide(index)}
+            >
+              {index === currentSlide && (
+                <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-75" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-10">
+          <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white rounded-full flex justify-center">
+            <div className="w-1 h-2 sm:h-3 bg-white rounded-full mt-1.5 sm:mt-2 animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Custom Styles for Ken Burns Animations */}
+        <style>{`
+          @keyframes ken-burns-zoom-in {
+            0% {
+              transform: scale(1);
+            }
+            100% {
+              transform: scale(1.15);
+            }
+          }
+
+          @keyframes ken-burns-zoom-out {
+            0% {
+              transform: scale(1.15);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+
+          @keyframes ken-burns-pan-left {
+            0% {
+              transform: scale(1.15) translateX(0);
+            }
+            100% {
+              transform: scale(1.15) translateX(-4%);
+            }
+          }
+
+          @keyframes ken-burns-pan-right {
+            0% {
+              transform: scale(1.15) translateX(0);
+            }
+            100% {
+              transform: scale(1.15) translateX(4%);
+            }
+          }
+
+          .animate-ken-burns-zoom-in {
+            animation: ken-burns-zoom-in 8s ease-out forwards;
+          }
+
+          .animate-ken-burns-zoom-out {
+            animation: ken-burns-zoom-out 8s ease-out forwards;
+          }
+
+          .animate-ken-burns-pan-left {
+            animation: ken-burns-pan-left 8s ease-out forwards;
+          }
+
+          .animate-ken-burns-pan-right {
+            animation: ken-burns-pan-right 8s ease-out forwards;
+          }
+        `}</style>
+      </section>
+     <FeaturesSection/>
+      <StatsSection/>
+      <SwipeableCardsSection/>
+      <NewsSection/>
+      <CTASection/>
+  </div>
+  )
+}
